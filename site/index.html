@@ -53,8 +53,10 @@ button:disabled{opacity:.5}
 <small>No compartas contraseñas, claves privadas ni datos sensibles.</small>
 </section>
 </main>
+<script src="./api-config.js"></script>
 <script>
 (() => {
+  const API_BASE = String(window.IAO_API_BASE || "").trim().replace(/\\/+$/, "");
   const statusEl = document.querySelector("#status");
   const messagesEl = document.querySelector("#messages");
   const messageEl = document.querySelector("#message");
@@ -65,14 +67,17 @@ button:disabled{opacity:.5}
   function status(s) { statusEl.textContent = s; }
 
   async function request(path, method = "GET", body) {
+    if (!API_BASE) {
+      throw new Error("API_PUBLICA_NO_CONFIGURADA: falta la URL HTTPS del backend en api-config.js");
+    }
     const headers = {};
     if (token) headers.Authorization = "Bearer " + token;
     if (body !== undefined) headers["Content-Type"] = "application/json";
-    const response = await fetch(path, {
+    const response = await fetch(API_BASE + path, {
       method, headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
-      credentials: "same-origin"
+      credentials: "omit"
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
