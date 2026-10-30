@@ -1,4 +1,4 @@
-const CACHE = "iao-public-v1";
+const CACHE = "iao-public-v2";
 const FILES = [
   "./",
   "./index.html",

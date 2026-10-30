@@ -18,6 +18,7 @@ button:disabled{opacity:.5}
 .msg{padding:12px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
 .user{background:#263d60}.omega{background:#202b38}
 .status{min-height:1.5em;color:#b9d0f7}
+.model-identity{margin:8px 0;padding:9px 11px;border:1px solid #46546a;border-radius:9px;background:#151e2b;color:#c8d8ed;font-size:.88rem;overflow-wrap:anywhere}
 </style>
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#101827">
@@ -46,6 +47,7 @@ button:disabled{opacity:.5}
 </section>
 <section class="panel">
 <div id="messages" aria-live="polite"></div>
+<div id="model-identity" class="model-identity" role="status" aria-live="polite">Identidad del modelo: pendiente de la primera respuesta.</div>
 <label for="message">Mensaje</label>
 <textarea id="message" rows="3" maxlength="20000"
  placeholder="Escribe a IAO..." disabled></textarea>
@@ -99,6 +101,41 @@ button:disabled{opacity:.5}
     messagesEl.append(div);
   }
 
+  function showModelIdentity(identity) {
+    const el = document.querySelector("#model-identity");
+    if (!el) return;
+
+    if (!identity || typeof identity !== "object") {
+      el.textContent = "Identidad del modelo: no informada por el servidor.";
+      return;
+    }
+
+    const provider = typeof identity.provider_id === "string"
+      ? identity.provider_id : "";
+    const configured = typeof identity.configured_model === "string"
+      ? identity.configured_model : "";
+    const upstream = typeof identity.upstream_model === "string"
+      ? identity.upstream_model : "";
+    const state = identity.identity_status;
+
+    const lines = [];
+    lines.push("Identidad técnica (respuesta del servidor)");
+    lines.push("Proveedor ID: " + (provider || "no informado"));
+
+    if (state === "upstream_model_reported" && upstream) {
+      lines.push("Modelo reportado por gateway: " + upstream);
+      lines.push("Estado: reportado por el gateway");
+    } else if (configured) {
+      lines.push("Modelo configurado: " + configured);
+      lines.push("Estado: el gateway no confirmó el modelo utilizado");
+    } else {
+      lines.push("Modelo: no verificado");
+      lines.push("Estado: identidad insuficiente");
+    }
+
+    el.textContent = lines.join("\n");
+  }
+
   connectBtn.addEventListener("click", async () => {
     if (busy) return;
     busy = true;
@@ -137,6 +174,7 @@ button:disabled{opacity:.5}
       const result = await request("/v1/chat", "POST",
         {conversation_id: conversationId, message});
       addMessage("omega", result.reply);
+      showModelIdentity(result.model_identity);
       status("Respuesta recibida.");
     } catch (e) {
       addMessage("omega", "No se pudo completar el mensaje: " + e.message);
