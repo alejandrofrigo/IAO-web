@@ -1,2 +1,5 @@
-/* Endpoint actual de IAO. El túnel es temporal. */
-window.IAO_API_BASE = "https://hugo-regulatory-eva-packet.trycloudflare.com";
+/* IAO public API endpoint; health and CORS verified. */
+window.IAO_API_BASE = "https://apply-mysql-surveys-stating.trycloudflare.com";
+window.iaoApiUrl = function (path) {
+  return new URL(String(path).replace(/^\/+/, ""), window.IAO_API_BASE + "/").toString();
+};
