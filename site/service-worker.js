@@ -1,4 +1,4 @@
-const CACHE = "iao-public-v2";
+const CACHE = "iao-public-v3";
 const FILES = [
   "./",
   "./index.html",
@@ -29,6 +29,12 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  // La configuración del backend nunca debe servirse desde una caché antigua.
+  if (url.pathname.endsWith("/api-config.js")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(
